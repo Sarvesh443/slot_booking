@@ -124,7 +124,6 @@ try {
       // save user token
       user.token = token;
 
-
       // user
       res.status(200).json(user);
     }
@@ -138,8 +137,55 @@ try {
 const auth = require("./middleware/auth");
 const Session = require("./model/deanSession");
 
-app.post("/welcome", auth, (req, res) => {
-    res.status(200).send("Welcome 🙌 ");
+app.get("/availableSessions", auth, async (req, res) => {
+    const availableSessions = await DeanSession.find({status: 'available'});
+    if(availableSessions) {
+        res.status(200).send(availableSessions);
+    } else {
+        res.status(404).send("No Session Available with the Dean")
+    }
+});
+
+app.get("/sessions", auth, async (req, res) => {
+    const allSessions = await DeanSession.find({});
+    res.status(200).send(allSessions);
+});
+
+app.post("/book/:slot", auth, async (req, res) => {
+    const slot = req.params.slot;
+    /**
+     * if(slot is available)
+     *  book the slot
+     * else {
+     *  see if other slots are available
+     *  else  throw error - info: book the available slot
+     * 
+     * }
+     */
+    const session = await DeanSession.findOne({slot: slot, status: 'available'});
+    if(session){
+        const { _id, slot, day } = session;
+        const updateSlot = new DeanSession({
+            _id,
+            slot,
+            day,
+            status: 'booked'
+        });
+        const option = { new: true };
+
+        const bookedSession = await DeanSession.findOneAndUpdate(_id, updateSlot, option);
+
+        res.status(200).send(bookedSession);
+    } else {
+        const availableSession = await DeanSession.findOne({status: 'available'});
+        if(availableSession) res.status(400).send(availableSession);
+        else{
+            console.log("No Session Found!");
+            res.status(400).send("No Session Available with the Dean!");
+        }
+    }
+    // const sessions = await DeanSession.find({slot: slot});
+    // res.status(200).send(sessions);
 });
 
 module.exports = app;
