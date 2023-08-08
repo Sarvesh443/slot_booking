@@ -15,6 +15,14 @@ const DeanSessionSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: ['available', 'booked'] // Example values, adjust as needed
+  },
+  booked_by: {
+    type: String,
+    required: false
+  },
+  start_time: {
+    type: Date,
+    default: Date.now
   }
 });
 

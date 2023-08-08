@@ -147,7 +147,13 @@ app.get("/availableSessions", auth, async (req, res) => {
 });
 
 app.get("/sessions", auth, async (req, res) => {
-    const allSessions = await DeanSession.find({});
+    const user = req.user.email;
+    const dean = user.substring(user.indexOf('@') + 1, user.indexOf('.'));
+    if(dean == 'dean'){
+        const deanSession = await DeanSession.find({});
+        res.status(400).send(deanSession);
+    }
+    const allSessions = await DeanSession.find({}, {booked_by: 0});
     res.status(200).send(allSessions);
 });
 
@@ -169,7 +175,8 @@ app.post("/book/:slot", auth, async (req, res) => {
             _id,
             slot,
             day,
-            status: 'booked'
+            status: 'booked',
+            booked_by: req.user.email
         });
         const option = { new: true };
 
