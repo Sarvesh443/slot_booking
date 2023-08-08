@@ -10,6 +10,7 @@ app.use(express.json());
 // importing user context
 const User = require("./model/user");
 
+const DeanSession = require("./model/deanSession");
 // Logic goes here
 
 // Register
@@ -123,6 +124,7 @@ try {
       // save user token
       user.token = token;
 
+
       // user
       res.status(200).json(user);
     }
@@ -130,7 +132,14 @@ try {
   } catch (err) {
     console.log(err);
   }
-  // Our register logic ends here
+  // Our login logic ends here
+});
+
+const auth = require("./middleware/auth");
+const Session = require("./model/deanSession");
+
+app.post("/welcome", auth, (req, res) => {
+    res.status(200).send("Welcome 🙌 ");
 });
 
 module.exports = app;

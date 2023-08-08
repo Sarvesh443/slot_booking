@@ -1,2 +1,0 @@
-###Register user
-GET http://localhost:3000/register
