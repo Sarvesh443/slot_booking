@@ -170,39 +170,47 @@ app.get("/sessions", auth, async (req, res) => {
         const deanSession = await DeanSession.find({});
         res.status(200).send(deanSession);
     } else {
-        const allSessions = await DeanSession.find({}, {booked_by: 0});
+        const allSessions = await DeanSession.find({});
         res.status(200).send(allSessions);
     }
 });
 
 app.post("/book/:slot", auth, async (req, res) => {
-    const slot = req.params.slot;
-
-    const session = await DeanSession.findOne({slot: slot, status: 'available'});
-    if(session){
-        const { _id, slot, day } = session;
-        const end_time = new Date(this.start_time.getTime() + 60 * 60 * 1000);
-        const updateSlot = new DeanSession({
-            _id,
-            slot,
-            day,
-            status: 'booked',
-            booked_by: req.user.email,
-            start_time: Date.now,
-            end_time: end_time
-        });
-        const option = { new: true };
-
-        const bookedSession = await DeanSession.findOneAndUpdate(_id, updateSlot, option);
-
-        res.status(200).send(bookedSession);
+    const user = req.user.email;
+    const dean = user.substring(user.indexOf('@') + 1, user.indexOf('.'));
+    if(dean == 'dean'){
+        res.status(200).send("Dean can't book a slot");
     } else {
-        const availableSession = await DeanSession.findOne({status: 'available'});
-        if(availableSession) 
-            res.status(400).send(availableSession);
-        else
-            res.status(400).send("No Session Available with the Dean!");
+        const slot = req.params.slot;
+
+        const session = await DeanSession.findOne({slot: slot, status: 'available'});
+        if(session){
+            const { _id, slot, day } = session;
+            const end_time = new Date().setHours(new Date().getHours() + 1);
+            console.log(end_time.toString());
+            const updateSlot = new DeanSession({
+                _id,
+                slot,
+                day,
+                status: 'booked',
+                booked_by: req.user.email,
+                start_time: Date.now,
+                end_time: end_time
+            });
+            const option = { new: true };
+    
+            const bookedSession = await DeanSession.findOneAndUpdate(_id, updateSlot, option);
+    
+            res.status(200).send(bookedSession);
+        } else {
+            const availableSession = await DeanSession.findOne({status: 'available'});
+            if(availableSession) 
+                res.status(400).send(availableSession);
+            else
+                res.status(400).send("No Session Available with the Dean!");
+        }
     }
+    
     // const sessions = await DeanSession.find({slot: slot});
     // res.status(200).send(sessions);
 });
